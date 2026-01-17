@@ -175,6 +175,42 @@ export type User = {
 };
 
 
+export const GetTeamsDocument = gql`
+    query GetTeams {
+  getTeams {
+    id
+    name
+    description
+    members {
+      id
+      name
+      email
+    }
+  }
+}
+    `;
+
+export function useGetTeamsQuery(options?: Omit<Urql.UseQueryArgs<GetTeamsQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetTeamsQuery, GetTeamsQueryVariables>({ query: GetTeamsDocument, ...options });
+};
+export const GetTasksDocument = gql`
+    query GetTasks($teamId: ID!) {
+  getTasks(teamId: $teamId) {
+    id
+    title
+    status
+    priority
+    dueDate
+    assignedTo {
+      name
+    }
+  }
+}
+    `;
+
+export function useGetTasksQuery(options: Omit<Urql.UseQueryArgs<GetTasksQueryVariables>, 'query'>) {
+  return Urql.useQuery<GetTasksQuery, GetTasksQueryVariables>({ query: GetTasksDocument, ...options });
+};
 export const LoginDocument = gql`
     mutation Login($input: LoginInput!) {
   login(input: $input) {
@@ -191,4 +227,21 @@ export const LoginDocument = gql`
 
 export function useLoginMutation() {
   return Urql.useMutation<LoginMutation, LoginMutationVariables>(LoginDocument);
+};
+export const SignupDocument = gql`
+    mutation Signup($input: SignupInput!) {
+  signup(input: $input) {
+    token
+    user {
+      id
+      name
+      email
+      role
+    }
+  }
+}
+    `;
+
+export function useSignupMutation() {
+  return Urql.useMutation<SignupMutation, SignupMutationVariables>(SignupDocument);
 };
