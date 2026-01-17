@@ -7,11 +7,21 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "generate:types": "graphql-codegen --config codegen.ts"
   },
   "dependencies": {
-    "nuxt": "^4.2.2",
+    "@urql/vue": "^2.0.0",
+    "graphql": "^16.12.0",
+    "nuxt": "^3.14.159",
+    "nuxt-i18n-micro": "^2.16.3",
+    "typescript": "^5.9.3",
     "vue": "^3.5.26",
     "vue-router": "^4.6.4"
+  },
+  "devDependencies": {
+    "@graphql-codegen/cli": "^6.1.1",
+    "@graphql-codegen/typescript": "^5.0.7",
+    "@graphql-codegen/typescript-urql": "^4.0.1"
   }
 }
