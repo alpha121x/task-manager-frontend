@@ -1,9 +1,6 @@
 <template>
-  <div>
-    <NuxtPage />
-  </div>
+  <NuxtPage />
 </template>
 
-<script setup lang=""ts"">
-// This enables automatic routing to /login, /dashboard, etc.
+<script setup lang="ts">
 </script>
