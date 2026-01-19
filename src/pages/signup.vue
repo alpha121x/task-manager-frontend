@@ -79,11 +79,15 @@ const SignupMutation = gql`
   }
 `
 
+// ✅ Initialize mutation at top level (reactive context)
+const [, executeSignup] = useMutation(SignupMutation)
+
 // Handle signup
 const handleSignup = async () => {
   loading.value = true
   try {
-    const [result] = await useMutation(SignupMutation, {
+    // ✅ Use executeSignup() instead of useMutation() inside function
+    const result = await executeSignup({
       input: { name: name.value, email: email.value, password: password.value }
     })
 

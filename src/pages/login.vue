@@ -32,7 +32,7 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { gql, useMutation } from '@urql/vue'
-import { navigateTo } from '#imports' // ✅ Add this
+import { navigateTo } from '#imports'
 
 // i18n
 const { locale } = useI18n()
@@ -44,7 +44,7 @@ const setLocale = (lang: 'en' | 'ar') => {
 const email = ref('')
 const password = ref('')
 
-// ✅ Define GraphQL mutation using gql tag
+// ✅ Define mutation at top level (reactive context)
 const LoginMutation = gql`
   mutation Login($input: LoginInput!) {
     login(input: $input) {
@@ -59,15 +59,19 @@ const LoginMutation = gql`
   }
 `
 
-// Login logic with real GraphQL
+// ✅ Initialize mutation hook at top level
+const [, executeLogin] = useMutation(LoginMutation)
+
+// Login logic
 const handleLogin = async () => {
-  const [result] = await useMutation(LoginMutation, {
+  // ✅ Use executeLogin() to trigger mutation
+  const result = await executeLogin({
     input: { email: email.value, password: password.value }
   })
 
   if (result.data?.login) {
     localStorage.setItem('token', result.data.login.token)
-    navigateTo('/dashboard') // ✅ Now works!
+    navigateTo('/dashboard')
   } else {
     alert('Login failed: ' + (result.error?.message || 'Unknown error'))
   }

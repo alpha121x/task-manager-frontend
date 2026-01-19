@@ -13,10 +13,10 @@
   "dependencies": {
     "@urql/vue": "^2.0.0",
     "graphql": "^16.12.0",
-    "nuxt": "^3.14.159",
-    "nuxt-i18n-micro": "^2.16.3",
+    "nuxt": "^3.12.4",
     "typescript": "^5.9.3",
     "vue": "^3.5.26",
+    "vue-i18n": "^9.14.5",
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
