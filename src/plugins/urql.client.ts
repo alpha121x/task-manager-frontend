@@ -1,23 +1,12 @@
-// src/plugins/urql.client.ts
-import { createClient, fetchExchange, cacheExchange, provideClient } from '@urql/vue'
+import { defineNuxtPlugin } from '#app'
+import { createClient, defaultExchanges } from '@urql/vue'
 
 export default defineNuxtPlugin((nuxtApp) => {
-  const config = useRuntimeConfig()
-  
-  // Create URQL client
   const client = createClient({
-    url: config.public.graphqlUrl,
-    exchanges: [cacheExchange, fetchExchange],
-    fetchOptions: () => {
-      const token = localStorage.getItem('token')
-      return {
-        headers: {
-          authorization: token ? `Bearer ${token}` : '',
-        },
-      }
-    },
+    url: 'http://localhost:4000/graphql',
+    exchanges: defaultExchanges,
   })
 
-  // Provide client to Vue app
-  nuxtApp.vueApp.use(provideClient(client))
+  // 👇 THIS is what actually provides $urql
+  nuxtApp.vueApp.provide('$urql', client)
 })
