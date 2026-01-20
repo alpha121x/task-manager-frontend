@@ -50,7 +50,11 @@
 import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { gql, useQuery } from '@urql/vue'
-import { navigateTo } from '#imports'
+
+// ✅ Add page meta for middleware
+definePageMeta({
+  middleware: 'auth'
+})
 
 // i18n
 const { locale } = useI18n()
@@ -72,7 +76,7 @@ const teams = ref<any[]>([])
 const fetchingTasks = ref(true)
 const tasks = ref<any[]>([])
 
-// ✅ Named GraphQL queries (required for codegen)
+// GraphQL queries
 const GetTeamsQuery = gql`
   query GetTeams {
     getTeams {
@@ -111,7 +115,7 @@ onMounted(async () => {
   }
   fetchingTeams.value = false
 
-  // Fetch tasks (use a mock team ID; in real app, pick from teams)
+  // Fetch tasks
   const taskResult = await useQuery({
     query: GetTasksQuery,
     variables: { teamId: "1" }

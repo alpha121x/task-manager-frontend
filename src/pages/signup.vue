@@ -1,104 +1,90 @@
-<!-- src/pages/signup.vue -->
 <template>
-  <div style="padding: 20px; max-width: 400px; margin: 50px auto;">
-    <h1>{{ $t('app.signup') }}</h1>
+  <ClientOnly>
+  <div class="flex min-h-screen items-center justify-center bg-gray-100">
+    <div class="w-full max-w-md bg-white p-8 rounded-xl shadow-lg">
+      <h1 class="text-2xl font-bold text-center mb-6">Create Account</h1>
 
-    <form @submit.prevent="handleSignup">
-      <input
-        v-model="name"
-        :placeholder="$t('app.name')"
-        required
-        style="display:block; width:100%; margin:10px 0; padding:8px;"
-      />
-      <input
-        v-model="email"
-        :placeholder="$t('app.email')"
-        type="email"
-        required
-        style="display:block; width:100%; margin:10px 0; padding:8px;"
-      />
-      <input
-        v-model="password"
-        :placeholder="$t('app.password')"
-        type="password"
-        minlength="6"
-        required
-        style="display:block; width:100%; margin:10px 0; padding:8px;"
-      />
-      <button
-        type="submit"
-        :disabled="loading"
-        style="padding:10px 20px; background:#28a745; color:white; border:none; cursor:pointer;"
-      >
-        {{ loading ? 'Creating account...' : $t('app.signup') }}
-      </button>
-    </form>
+      <form @submit.prevent="signup" class="space-y-4">
+        <input
+          v-model="name"
+          type="text"
+          placeholder="Full Name"
+          class="w-full border rounded-lg px-3 py-2"
+          required
+        />
 
-    <!-- Language switcher -->
-    <div style="margin-top: 20px;">
-      <button @click="setLocale('en')" style="margin:5px;">EN</button>
-      <button @click="setLocale('ar')" style="margin:5px;">AR</button>
+        <input
+          v-model="email"
+          type="email"
+          placeholder="Email"
+          class="w-full border rounded-lg px-3 py-2"
+          required
+        />
+
+        <input
+          v-model="password"
+          type="password"
+          placeholder="Password"
+          class="w-full border rounded-lg px-3 py-2"
+          required
+        />
+
+        <button
+          class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700"
+          :disabled="fetching"
+        >
+          {{ fetching ? 'Creating...' : 'Sign Up' }}
+        </button>
+
+        <p v-if="error" class="text-red-600 text-sm">
+          {{ error.message }}
+        </p>
+      </form>
+
+      <p class="text-sm text-center mt-4">
+        Already have an account?
+        <NuxtLink to="/login" class="text-blue-600 hover:underline">
+          Login
+        </NuxtLink>
+      </p>
     </div>
-
-    <p style="margin-top: 20px;">
-      Already have an account? <a href="/login" style="color:#007bff;">{{ $t('app.login') }}</a>
-    </p>
   </div>
+  </ClientOnly>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { gql, useMutation } from '@urql/vue'
-import { navigateTo } from '#imports'
+import { ref, watch } from 'vue'
+import { useMutation } from '@urql/vue'
+import { useRouter } from 'vue-router'
 
-// i18n
-const { locale } = useI18n()
-const setLocale = (lang: 'en' | 'ar') => {
-  locale.value = lang
-}
+const router = useRouter()
 
-// Form state
 const name = ref('')
 const email = ref('')
 const password = ref('')
-const loading = ref(false)
 
-// GraphQL mutation
-const SignupMutation = gql`
-  mutation Signup($input: SignupInput!) {
-    signup(input: $input) {
-      token
-      user {
-        id
-        name
-        email
-        role
-      }
+const SIGNUP_MUTATION = `
+  mutation Signup($name: String!, $email: String!, $password: String!) {
+    signup(name: $name, email: $email, password: $password) {
+      id
     }
   }
 `
 
-// ✅ Initialize mutation at top level (reactive context)
-const [, executeSignup] = useMutation(SignupMutation)
+const { executeMutation, fetching, error, data } =
+  useMutation(SIGNUP_MUTATION)
 
-// Handle signup
-const handleSignup = async () => {
-  loading.value = true
-  try {
-    // ✅ Use executeSignup() instead of useMutation() inside function
-    const result = await executeSignup({
-      input: { name: name.value, email: email.value, password: password.value }
-    })
-
-    if (result.data?.signup) {
-      localStorage.setItem('token', result.data.signup.token)
-      navigateTo('/dashboard')
-    } else {
-      alert('Signup failed: ' + (result.error?.message || 'Invalid input'))
-    }
-  } finally {
-    loading.value = false
-  }
+const signup = async () => {
+  await executeMutation({
+    name: name.value,
+    email: email.value,
+    password: password.value,
+  })
 }
+
+watch(data, (val) => {
+  if (val?.signup?.id) {
+    router.push('/login')
+  }
+})
 </script>

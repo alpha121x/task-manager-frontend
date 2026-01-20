@@ -4,10 +4,13 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   typescript: { strict: true, shim: false },
+
+  // ✅ No i18n module here!
   runtimeConfig: {
     public: {
       graphqlUrl: 'http://localhost:4000/graphql'
     }
-  }
-  // ✅ No i18n module here!
+  },
+
+  modules: ['@nuxtjs/tailwindcss']
 })

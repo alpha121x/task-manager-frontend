@@ -1,79 +1,86 @@
-<!-- src/pages/login.vue -->
 <template>
-  <div style="padding: 20px; max-width: 400px; margin: 50px auto;">
-    <h1>{{ $t('app.login') }}</h1>
-    
-    <form @submit.prevent="handleLogin">
-      <input 
-        v-model="email" 
-        :placeholder="$t('app.email')" 
-        required 
-        style="display:block; width:100%; margin:10px 0; padding:8px;"
-      />
-      <input 
-        v-model="password" 
-        type="password" 
-        :placeholder="$t('app.password')" 
-        required 
-        style="display:block; width:100%; margin:10px 0; padding:8px;"
-      />
-      <button type="submit" style="padding:10px 20px;">{{ $t('app.login') }}</button>
-    </form>
+  <ClientOnly>
+  <div class="flex min-h-screen items-center justify-center bg-gray-100">
+    <div class="w-full max-w-md bg-white p-8 rounded-xl shadow-lg">
+      <h1 class="text-2xl font-bold text-center mb-6">Login</h1>
 
-    <!-- Language switcher -->
-    <div style="margin-top: 20px;">
-      <button @click="setLocale('en')" style="margin:5px;">EN</button>
-      <button @click="setLocale('ar')" style="margin:5px;">AR</button>
+      <form @submit.prevent="login" class="space-y-4">
+        <input
+          v-model="email"
+          type="email"
+          placeholder="Email"
+          class="w-full border rounded-lg px-3 py-2"
+          required
+        />
+
+        <input
+          v-model="password"
+          type="password"
+          placeholder="Password"
+          class="w-full border rounded-lg px-3 py-2"
+          required
+        />
+
+        <button
+          class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
+          :disabled="fetching"
+        >
+          {{ fetching ? 'Logging in...' : 'Login' }}
+        </button>
+
+        <p v-if="error" class="text-red-600 text-sm">
+          {{ error.message }}
+        </p>
+      </form>
+
+      <p class="text-sm text-center mt-4">
+        Don’t have an account?
+        <NuxtLink to="/signup" class="text-blue-600 hover:underline">
+          Sign up
+        </NuxtLink>
+      </p>
     </div>
   </div>
+  </ClientOnly>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { gql, useMutation } from '@urql/vue'
-import { navigateTo } from '#imports'
+import { ref, watch } from 'vue'
+import { useMutation } from '@urql/vue'
+import { useRouter } from 'vue-router'
 
-// i18n
-const { locale } = useI18n()
-const setLocale = (lang: 'en' | 'ar') => {
-  locale.value = lang
-}
+// 👇 Disable SSR for this page
+definePageMeta({
+  ssr: false
+})
 
-// Form
+const router = useRouter()
+
 const email = ref('')
 const password = ref('')
 
-// ✅ Define mutation at top level (reactive context)
-const LoginMutation = gql`
-  mutation Login($input: LoginInput!) {
-    login(input: $input) {
+const LOGIN_MUTATION = `
+  mutation Login($email: String!, $password: String!) {
+    login(email: $email, password: $password) {
       token
-      user {
-        id
-        name
-        email
-        role
-      }
     }
   }
 `
 
-// ✅ Initialize mutation hook at top level
-const [, executeLogin] = useMutation(LoginMutation)
+const { executeMutation, fetching, error, data } =
+  useMutation(LOGIN_MUTATION)
 
-// Login logic
-const handleLogin = async () => {
-  // ✅ Use executeLogin() to trigger mutation
-  const result = await executeLogin({
-    input: { email: email.value, password: password.value }
+const login = async () => {
+  await executeMutation({
+    email: email.value,
+    password: password.value,
   })
-
-  if (result.data?.login) {
-    localStorage.setItem('token', result.data.login.token)
-    navigateTo('/dashboard')
-  } else {
-    alert('Login failed: ' + (result.error?.message || 'Unknown error'))
-  }
 }
+
+watch(data, (val) => {
+  if (val?.login?.token) {
+    localStorage.setItem('token', val.login.token)
+    router.push('/dashboard')
+  }
+})
 </script>
