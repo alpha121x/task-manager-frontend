@@ -23,6 +23,8 @@ export type AuthPayload = {
   user: User;
 };
 
+
+
 export type CreateTaskInput = {
   assignedToId: Scalars['ID']['input'];
   description?: InputMaybe<Scalars['String']['input']>;
