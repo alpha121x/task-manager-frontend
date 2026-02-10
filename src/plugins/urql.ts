@@ -1,16 +1,16 @@
 import { defineNuxtPlugin, useRuntimeConfig } from '#app'
-import { provideClient } from '@urql/vue'
-import { Client, cacheExchange, fetchExchange } from '@urql/core'
+import { createClient, VueUrql } from '@urql/vue'
+import { cacheExchange, fetchExchange } from '@urql/core'
 
-export default defineNuxtPlugin(() => {
+export default defineNuxtPlugin((nuxtApp) => {
   const config = useRuntimeConfig()
 
-  const client = new Client({
+  const client = createClient({
     url: config.public.graphqlUrl,
-    exchanges: [cacheExchange, fetchExchange],
+    exchanges: [cacheExchange, fetchExchange], // ⭐ THIS FIXES reduceRight
   })
 
-  provideClient(client)
+  nuxtApp.vueApp.use(VueUrql, client)
 
-  console.log('🔥 URQL READY')
+  console.log('🔥 URQL INSTALLED CORRECTLY')
 })
