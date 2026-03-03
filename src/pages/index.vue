@@ -1,4 +1,5 @@
-<!-- src/pages/index.vue -->
 <script setup lang="ts">
-navigateTo('/login')
+import { routes } from '~/modules/core/routes'
+
+navigateTo(routes.login)
 </script>

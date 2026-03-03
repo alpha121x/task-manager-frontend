@@ -1,17 +1,19 @@
 // src/middleware/auth.ts
-export default defineNuxtRouteMiddleware((to, from) => {
-  // Only run on client side
-  if (process.client) {
-    const token = localStorage.getItem('token')
-    
-    // If no token and trying to access protected routes
-    if (!token && to.path !== '/login' && to.path !== '/signup') {
-      return navigateTo('/login')
-    }
-    
-    // If has token and trying to access login/signup
-    if (token && (to.path === '/login' || to.path === '/signup')) {
-      return navigateTo('/dashboard')
-    }
+import { publicRoutes, routes } from '~/modules/core/routes'
+
+export default defineNuxtRouteMiddleware((to) => {
+  if (!process.client) {
+    return
+  }
+
+  const token = localStorage.getItem('token')
+  const isPublic = publicRoutes.includes(to.path as (typeof publicRoutes)[number])
+
+  if (!token && !isPublic) {
+    return navigateTo(routes.login)
+  }
+
+  if (token && isPublic) {
+    return navigateTo(routes.dashboard)
   }
 })

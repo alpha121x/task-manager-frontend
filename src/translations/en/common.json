@@ -1,0 +1,16 @@
+{
+  "brand": {
+    "name": "Task Manager"
+  },
+  "actions": {
+    "logout": "Logout",
+    "login": "Login",
+    "signup": "Sign Up"
+  },
+  "states": {
+    "loading": "Loading..."
+  },
+  "errors": {
+    "unknown": "Something went wrong."
+  }
+}

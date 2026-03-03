@@ -1,129 +1,85 @@
-<!-- src/pages/dashboard.vue -->
 <template>
-  <div style="padding: 20px; max-width: 1200px; margin: 0 auto;">
-    <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-      <h1>{{ $t('app.title') }} - Dashboard</h1>
-      <div>
-        <button @click="logout" style="margin-right:10px;">Logout</button>
-        <button @click="setLocale('en')" style="margin:0 5px;">EN</button>
-        <button @click="setLocale('ar')" style="margin:0 5px;">AR</button>
+  <div class="mx-auto min-h-screen w-full max-w-6xl px-4 py-6">
+    <header class="mb-6 flex flex-wrap items-center justify-between gap-3">
+      <h1 class="text-2xl font-bold text-slate-900">{{ t('common.brand.name') }} - {{ t('dashboard.title') }}</h1>
+      <div class="flex items-center gap-2">
+        <button class="rounded-md border px-3 py-1.5 text-sm" @click="setLocale('en')">EN</button>
+        <button class="rounded-md border px-3 py-1.5 text-sm" @click="setLocale('ar')">AR</button>
+        <button class="rounded-md bg-slate-900 px-3 py-1.5 text-sm text-white" @click="logout">
+          {{ t('common.actions.logout') }}
+        </button>
       </div>
     </header>
 
-    <section style="margin-bottom:30px;">
-      <h2>My Tasks</h2>
-      <p v-if="fetchingTasks">Loading tasks...</p>
-      <ul v-else-if="tasks.length">
-        <li v-for="task in tasks" :key="task.id" style="padding:10px; border-bottom:1px solid #eee;">
-          <strong>{{ task.title }}</strong> – {{ task.status }} ({{ task.priority }})
-          <br />
-          Assigned to: {{ task.assignedTo?.name || '—' }}
-          <span v-if="task.dueDate"> | Due: {{ new Date(task.dueDate).toLocaleDateString() }}</span>
+    <section class="mb-8 rounded-xl border border-slate-200 bg-white p-4">
+      <h2 class="mb-4 text-lg font-semibold">{{ t('dashboard.tasks.title') }}</h2>
+      <p v-if="tasksLoading">{{ t('common.states.loading') }}</p>
+      <ul v-else-if="tasks.length" class="space-y-3">
+        <li v-for="task in tasks" :key="task.id" class="rounded-lg border border-slate-100 p-3">
+          <p class="font-semibold">{{ task.title }}</p>
+          <p class="text-sm text-slate-600">
+            {{ task.status }} | {{ task.priority }}
+          </p>
         </li>
       </ul>
-      <p v-else>No tasks found.</p>
+      <p v-else>{{ t('dashboard.tasks.empty') }}</p>
     </section>
 
-    <section>
-      <h2>Teams</h2>
-      <p v-if="fetchingTeams">Loading teams...</p>
-      <div v-else-if="teams.length" style="display:flex; gap:20px; flex-wrap:wrap;">
-        <div
+    <section class="rounded-xl border border-slate-200 bg-white p-4">
+      <h2 class="mb-4 text-lg font-semibold">{{ t('dashboard.teams.title') }}</h2>
+      <p v-if="teamsLoading">{{ t('common.states.loading') }}</p>
+      <div v-else-if="teams.length" class="grid gap-3 md:grid-cols-2">
+        <article
           v-for="team in teams"
           :key="team.id"
-          style="border:1px solid #ccc; padding:15px; border-radius:8px; width:300px;"
+          class="rounded-lg border border-slate-100 p-3"
         >
-          <h3>{{ team.name }}</h3>
-          <p>{{ team.description || 'No description' }}</p>
-          <p><strong>Members:</strong></p>
-          <ul>
-            <li v-for="member in team.members" :key="member.id">{{ member.name }}</li>
-          </ul>
-        </div>
+          <h3 class="font-semibold">{{ team.name }}</h3>
+          <p class="text-sm text-slate-600">{{ team.description || t('dashboard.teams.noDescription') }}</p>
+        </article>
       </div>
-      <p v-else>No teams found.</p>
+      <p v-else>{{ t('dashboard.teams.empty') }}</p>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { gql, useQuery } from '@urql/vue'
+import { useGraphqlQuery } from '~/composables/useGraphQL'
+import { routes } from '~/modules/core/routes'
+import { GetTasksQuery, GetTeamsQuery } from '~/graphql/querries/dashboard.query'
 
-// ✅ Add page meta for middleware
 definePageMeta({
   middleware: 'auth'
 })
 
-// i18n
-const { locale } = useI18n()
+const { locale, t } = useI18n()
 const setLocale = (lang: 'en' | 'ar') => {
   locale.value = lang
 }
 
-// Logout
 const logout = () => {
   localStorage.removeItem('token')
-  navigateTo('/login')
+  navigateTo(routes.login)
 }
 
-// Fetch teams
-const fetchingTeams = ref(true)
-const teams = ref<any[]>([])
+const { result: teamsResult, loading: teamsLoading } = useGraphqlQuery<{
+  getTeams: Array<{ id: string; name: string; description?: string }>
+}>(GetTeamsQuery)
 
-// Fetch tasks
-const fetchingTasks = ref(true)
-const tasks = ref<any[]>([])
+const teams = computed(() => teamsResult.value?.getTeams ?? [])
 
-// GraphQL queries
-const GetTeamsQuery = gql`
-  query GetTeams {
-    getTeams {
-      id
-      name
-      description
-      members {
-        id
-        name
-        email
-      }
-    }
+const selectedTeamId = computed(() => teams.value[0]?.id || '')
+const { result: tasksResult, loading: tasksLoading, refetch: refetchTasks } = useGraphqlQuery<{
+  getTasks: Array<{ id: string; title: string; status: string; priority: string }>
+}, { teamId: string }>(GetTasksQuery, { teamId: selectedTeamId.value })
+
+watch(selectedTeamId, (teamId) => {
+  if (teamId) {
+    refetchTasks({ teamId })
   }
-`
-
-const GetTasksQuery = gql`
-  query GetTasks($teamId: ID!) {
-    getTasks(teamId: $teamId) {
-      id
-      title
-      status
-      priority
-      dueDate
-      assignedTo {
-        name
-      }
-    }
-  }
-`
-
-onMounted(async () => {
-  // Fetch teams
-  const teamResult = await useQuery({ query: GetTeamsQuery }).toPromise()
-  if (teamResult.data?.getTeams) {
-    teams.value = teamResult.data.getTeams
-  }
-  fetchingTeams.value = false
-
-  // Fetch tasks
-  const taskResult = await useQuery({
-    query: GetTasksQuery,
-    variables: { teamId: "1" }
-  }).toPromise()
-
-  if (taskResult.data?.getTasks) {
-    tasks.value = taskResult.data.getTasks
-  }
-  fetchingTasks.value = false
 })
+
+const tasks = computed(() => tasksResult.value?.getTasks ?? [])
 </script>

@@ -1,5 +1,4 @@
-// src/graphql/mutations/auth.mutation.ts
-import { gql } from '@urql/vue'
+import { gql } from '@apollo/client/core'
 
 export const LoginMutation = gql`
   mutation Login($input: LoginInput!) {

@@ -1,0 +1,12 @@
+{
+  "title": "Dashboard",
+  "tasks": {
+    "title": "My Tasks",
+    "empty": "No tasks found."
+  },
+  "teams": {
+    "title": "Teams",
+    "empty": "No teams found.",
+    "noDescription": "No description"
+  }
+}

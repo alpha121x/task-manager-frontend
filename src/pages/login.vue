@@ -1,94 +1,78 @@
 <template>
-  <div class="flex min-h-screen items-center justify-center bg-gray-100">
-    <div class="w-full max-w-md bg-white p-8 rounded-xl shadow">
-      <h1 class="text-2xl font-bold mb-6 text-center">Login</h1>
+  <div class="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 via-sky-50 to-cyan-100 px-4">
+    <AuthCard :title="t('auth.login.title')" :subtitle="t('auth.login.subtitle')">
+      <FormEngine
+        :schema="loginSchema"
+        :model="form"
+        :submit-label="loading ? t('auth.actions.loggingIn') : t('auth.actions.login')"
+        :submitting="loading"
+        :error-message="errorMsg"
+        @submit="handleLogin"
+        @update:model="updateField"
+      />
 
-      <form @submit.prevent="login" class="space-y-4">
-        <input
-          v-model="email"
-          type="email"
-          placeholder="Email"
-          class="w-full border rounded px-3 py-2"
-          required
-        />
-
-        <input
-          v-model="password"
-          type="password"
-          placeholder="Password"
-          class="w-full border rounded px-3 py-2"
-          required
-        />
-
-        <button
-          type="submit"
-          class="w-full bg-blue-600 text-white py-2 rounded"
-          :disabled="loading"
-        >
-          {{ loading ? 'Logging in...' : 'Login' }}
-        </button>
-
-        <p v-if="errorMsg" class="text-red-600 text-sm">
-          {{ errorMsg }}
-        </p>
-      </form>
-    </div>
+      <p class="mt-5 text-sm text-slate-600">
+        {{ t('auth.links.noAccount') }}
+        <NuxtLink :to="routes.signup" class="font-semibold text-sky-700 hover:underline">
+          {{ t('auth.actions.signup') }}
+        </NuxtLink>
+      </p>
+    </AuthCard>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useMutation } from '@urql/vue'
+import { reactive, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import AuthCard from '~/modules/auth/components/AuthCard.vue'
+import { loginSchema } from '~/modules/auth/forms/login.schema'
+import { routes } from '~/modules/core/routes'
+import FormEngine from '~/modules/shared/components/FormEngine.vue'
+import { useGraphqlMutation } from '~/composables/useGraphQL'
+import { LoginMutation } from '~/graphql/mutations/auth.mutation'
 
-const router = useRouter()
-
-const email = ref('')
-const password = ref('')
-const loading = ref(false)
-const errorMsg = ref<string | null>(null)
-
-// These will be assigned AFTER mount
-let executeMutation: any = null
-
-const LOGIN_MUTATION = `
-  mutation Login($email: String!, $password: String!) {
-    login(email: $email, password: $password) {
-      token
-    }
-  }
-`
-
-// 🔑 THIS IS THE FIX
-onMounted(() => {
-  const mutation = useMutation(LOGIN_MUTATION)
-  executeMutation = mutation.executeMutation
+definePageMeta({
+  middleware: 'auth'
 })
 
-// Called on form submit
-const login = async () => {
-  if (!executeMutation) return
+const { t } = useI18n()
+const router = useRouter()
 
-  loading.value = true
-  errorMsg.value = null
+const form = reactive({
+  email: '',
+  password: ''
+})
+
+const errorMsg = ref('')
+const { mutate, loading } = useGraphqlMutation<{
+  login: { token: string }
+}, { input: { email: string; password: string } }>(LoginMutation)
+
+const handleLogin = async () => {
+  errorMsg.value = ''
 
   try {
-    const result = await executeMutation({
-      email: email.value,
-      password: password.value,
+    const result = await mutate({
+      input: {
+        email: form.email,
+        password: form.password
+      }
     })
 
     const token = result?.data?.login?.token
-    if (token) {
-      localStorage.setItem('token', token)
-      router.push('/dashboard')
-    } else {
-      errorMsg.value = 'Invalid credentials'
+    if (!token) {
+      errorMsg.value = t('auth.errors.invalidCredentials')
+      return
     }
-  } catch (err: any) {
-    errorMsg.value = err.message || 'Login failed'
-  } finally {
-    loading.value = false
+
+    localStorage.setItem('token', token)
+    router.push(routes.dashboard)
+  } catch (error) {
+    errorMsg.value = error instanceof Error ? error.message : t('common.errors.unknown')
   }
+}
+
+const updateField = (payload: { key: string; value: string }) => {
+  form[payload.key as keyof typeof form] = payload.value
 }
 </script>

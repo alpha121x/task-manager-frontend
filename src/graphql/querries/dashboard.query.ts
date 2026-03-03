@@ -1,4 +1,4 @@
-import { gql } from '@urql/vue'
+import { gql } from '@apollo/client/core'
 
 export const GetTeamsQuery = gql`
   query GetTeams {
