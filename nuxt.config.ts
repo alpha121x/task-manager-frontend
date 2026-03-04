@@ -4,6 +4,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   typescript: { strict: true, shim: false },
+  css: ['~/assets/css/main.css'],
 
   // ✅ No i18n module here!
   runtimeConfig: {

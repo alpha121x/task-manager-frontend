@@ -1,11 +1,18 @@
 <template>
-  <div class="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 via-emerald-50 to-cyan-100 px-4">
+  <div class="mx-auto grid min-h-screen w-full max-w-6xl items-center gap-10 px-4 py-10 md:grid-cols-2">
+    <section class="hidden md:block">
+      <h1 class="mb-4 text-5xl font-bold text-slate-900">Create Your Team Hub</h1>
+      <p class="max-w-md text-base text-slate-600">
+        Sign up to organize tasks, track owners, and move work from backlog to done with clarity.
+      </p>
+    </section>
+
     <AuthCard :title="t('auth.signup.title')" :subtitle="t('auth.signup.subtitle')">
       <FormEngine
         :schema="signupSchema"
         :model="form"
-        :submit-label="loading ? t('auth.actions.creating') : t('auth.actions.signup')"
-        :submitting="loading"
+        :submit-label="isSubmitting ? t('auth.actions.creating') : t('auth.actions.signup')"
+        :submitting="isSubmitting"
         :error-message="errorMsg"
         @submit="handleSignup"
         @update:model="updateField"
@@ -13,7 +20,7 @@
 
       <p class="mt-5 text-sm text-slate-600">
         {{ t('auth.links.hasAccount') }}
-        <NuxtLink :to="routes.login" class="font-semibold text-emerald-700 hover:underline">
+        <NuxtLink :to="routes.login" class="font-semibold text-emerald-800 hover:underline">
           {{ t('auth.actions.login') }}
         </NuxtLink>
       </p>
@@ -22,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AuthCard from '~/modules/auth/components/AuthCard.vue'
 import { signupSchema } from '~/modules/auth/forms/signup.schema'
@@ -49,6 +56,7 @@ const { mutate, loading } = useGraphqlMutation<
   { signup: { token: string } },
   { input: { name: string; email: string; password: string } }
 >(SignupMutation)
+const isSubmitting = computed(() => loading.value)
 
 const handleSignup = async () => {
   errorMsg.value = ''

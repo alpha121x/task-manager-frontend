@@ -2,7 +2,7 @@
   <button
     :type="type"
     :disabled="disabled"
-    class="w-full rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+    class="w-full rounded-xl bg-gradient-to-r from-emerald-700 to-sky-700 px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
   >
     <slot />
   </button>

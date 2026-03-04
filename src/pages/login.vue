@@ -1,11 +1,18 @@
 <template>
-  <div class="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-100 via-sky-50 to-cyan-100 px-4">
+  <div class="mx-auto grid min-h-screen w-full max-w-6xl items-center gap-10 px-4 py-10 md:grid-cols-2">
+    <section class="hidden md:block">
+      <h1 class="mb-4 text-5xl font-bold text-slate-900">Ship Work Faster</h1>
+      <p class="max-w-md text-base text-slate-600">
+        Manage teams, track priorities, and keep delivery flow visible from one clean workspace.
+      </p>
+    </section>
+
     <AuthCard :title="t('auth.login.title')" :subtitle="t('auth.login.subtitle')">
       <FormEngine
         :schema="loginSchema"
         :model="form"
-        :submit-label="loading ? t('auth.actions.loggingIn') : t('auth.actions.login')"
-        :submitting="loading"
+        :submit-label="isSubmitting ? t('auth.actions.loggingIn') : t('auth.actions.login')"
+        :submitting="isSubmitting"
         :error-message="errorMsg"
         @submit="handleLogin"
         @update:model="updateField"
@@ -13,7 +20,7 @@
 
       <p class="mt-5 text-sm text-slate-600">
         {{ t('auth.links.noAccount') }}
-        <NuxtLink :to="routes.signup" class="font-semibold text-sky-700 hover:underline">
+        <NuxtLink :to="routes.signup" class="font-semibold text-sky-800 hover:underline">
           {{ t('auth.actions.signup') }}
         </NuxtLink>
       </p>
@@ -22,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AuthCard from '~/modules/auth/components/AuthCard.vue'
 import { loginSchema } from '~/modules/auth/forms/login.schema'
@@ -47,6 +54,7 @@ const errorMsg = ref('')
 const { mutate, loading } = useGraphqlMutation<{
   login: { token: string }
 }, { input: { email: string; password: string } }>(LoginMutation)
+const isSubmitting = computed(() => loading.value)
 
 const handleLogin = async () => {
   errorMsg.value = ''
