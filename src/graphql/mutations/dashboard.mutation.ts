@@ -25,3 +25,14 @@ export const DeleteTaskMutation = gql`
     deleteTask(id: $id)
   }
 `
+
+export const CreateTeamMutation = gql`
+  mutation CreateTeam($input: CreateTeamInput!) {
+    createTeam(input: $input) {
+      team {
+        id
+        name
+      }
+    }
+  }
+`

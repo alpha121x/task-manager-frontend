@@ -15,6 +15,16 @@ export const GetTeamsQuery = gql`
   }
 `
 
+export const GetMeQuery = gql`
+  query GetMe {
+    me {
+      id
+      name
+      email
+    }
+  }
+`
+
 export const GetTasksQuery = gql`
   query GetTasks($teamId: ID!) {
     getTasks(teamId: $teamId) {

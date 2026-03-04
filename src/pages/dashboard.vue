@@ -10,6 +10,7 @@
         <div class="flex items-center gap-2">
           <button class="rounded-lg border border-slate-300 bg-white/80 px-3 py-1.5 text-sm font-medium" @click="setLocale('en')">EN</button>
           <button class="rounded-lg border border-slate-300 bg-white/80 px-3 py-1.5 text-sm font-medium" @click="setLocale('ar')">AR</button>
+          <NuxtLink :to="routes.teams" class="rounded-lg border border-slate-300 bg-white/80 px-3 py-1.5 text-sm font-medium text-slate-800">Manage Teams</NuxtLink>
           <button class="rounded-lg bg-slate-900 px-3 py-1.5 text-sm font-semibold text-white" @click="logout">
             {{ t('common.actions.logout') }}
           </button>
@@ -73,7 +74,7 @@
 
           <select v-model="filters.assigneeId" class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800">
             <option value="all">All assignees</option>
-            <option v-for="member in selectedTeamMembers" :key="member.id" :value="member.id">{{ member.name }}</option>
+            <option v-for="member in assigneeOptions" :key="member.id" :value="member.id">{{ member.name }}</option>
           </select>
         </div>
 
@@ -167,8 +168,11 @@
               class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800"
             >
               <option disabled value="">Select member</option>
-              <option v-for="member in selectedTeamMembers" :key="member.id" :value="member.id">{{ member.name }}</option>
+              <option v-for="member in assigneeOptions" :key="member.id" :value="member.id">{{ member.name }}</option>
             </select>
+            <p v-if="!assigneeOptions.length" class="mt-1 text-xs text-amber-700">
+              This team has no members yet. Add members in team management.
+            </p>
           </div>
 
           <div>
@@ -187,7 +191,7 @@
           <div class="flex gap-2">
             <button
               type="submit"
-              :disabled="createLoading || updateLoading || !selectedTeamId"
+              :disabled="createLoading || updateLoading || !selectedTeamId || !assigneeOptions.length"
               class="flex-1 rounded-lg bg-emerald-700 px-3 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
             >
               {{ createLoading || updateLoading ? 'Saving...' : editingTaskId ? 'Update Task' : 'Create Task' }}
@@ -213,7 +217,7 @@ import { useI18n } from 'vue-i18n'
 import { useQuery } from '@vue/apollo-composable'
 import { useGraphqlMutation, useGraphqlQuery } from '~/composables/useGraphQL'
 import { DeleteTaskMutation, CreateTaskMutation, UpdateTaskMutation } from '~/graphql/mutations/dashboard.mutation'
-import { GetTasksQuery, GetTeamsQuery } from '~/graphql/querries/dashboard.query'
+import { GetMeQuery, GetTasksQuery, GetTeamsQuery } from '~/graphql/querries/dashboard.query'
 import { routes } from '~/modules/core/routes'
 
 definePageMeta({
@@ -286,10 +290,19 @@ const editingTaskId = ref('')
 const formError = ref('')
 
 const { result: teamsResult, loading: teamsLoading } = useGraphqlQuery<{ getTeams: Team[] }>(GetTeamsQuery)
+const { result: meResult } = useGraphqlQuery<{ me: TeamMember | null }>(GetMeQuery)
 
 const teams = computed(() => teamsResult.value?.getTeams ?? [])
 const selectedTeam = computed(() => teams.value.find((team) => team.id === selectedTeamId.value) ?? null)
 const selectedTeamMembers = computed(() => selectedTeam.value?.members ?? [])
+const assigneeOptions = computed(() => {
+  if (selectedTeamMembers.value.length) {
+    return selectedTeamMembers.value
+  }
+
+  const me = meResult.value?.me
+  return me ? [me] : []
+})
 
 watch(
   teams,
@@ -302,7 +315,7 @@ watch(
 )
 
 watch(
-  selectedTeamMembers,
+  assigneeOptions,
   (members) => {
     if (!members.length) {
       taskForm.assignedToId = ''
@@ -416,7 +429,7 @@ const resetForm = () => {
   taskForm.status = 'todo'
   taskForm.priority = 'medium'
   taskForm.dueDate = ''
-  taskForm.assignedToId = selectedTeamMembers.value[0]?.id ?? ''
+  taskForm.assignedToId = assigneeOptions.value[0]?.id ?? ''
   formError.value = ''
 }
 
@@ -523,3 +536,5 @@ watch(teamsLoading, () => {
   }
 })
 </script>
+
+
