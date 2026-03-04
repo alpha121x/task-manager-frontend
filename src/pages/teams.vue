@@ -85,7 +85,7 @@
               placeholder="id1,id2,id3"
               class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800"
             >
-            <p class="mt-1 text-xs text-slate-600">Your own user will always be added automatically.</p>
+            <p class="mt-1 text-xs text-slate-600">Current logged-in user is auto-added by backend.</p>
           </div>
 
           <p v-if="formError" class="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -110,7 +110,7 @@ import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useGraphqlMutation, useGraphqlQuery } from '~/composables/useGraphQL'
 import { CreateTeamMutation } from '~/graphql/mutations/dashboard.mutation'
-import { GetMeQuery, GetTeamsQuery } from '~/graphql/querries/dashboard.query'
+import { GetTeamsQuery } from '~/graphql/querries/dashboard.query'
 import { routes } from '~/modules/core/routes'
 
 definePageMeta({
@@ -152,8 +152,6 @@ const {
   refetch: refetchTeams
 } = useGraphqlQuery<{ getTeams: Team[] }>(GetTeamsQuery)
 
-const { result: meResult } = useGraphqlQuery<{ me: { id: string } | null }>(GetMeQuery)
-
 const { mutate, loading: createLoading } = useGraphqlMutation<
   { createTeam: { team: { id: string; name: string } } },
   { input: { name: string; description?: string; memberIds: string[] } }
@@ -170,25 +168,17 @@ const createTeam = async () => {
     return
   }
 
-  const meId = meResult.value?.me?.id
-  if (!meId) {
-    formError.value = 'Could not load current user. Please login again.'
-    return
-  }
-
   const extraIds = form.extraMemberIds
     .split(',')
     .map((value) => value.trim())
     .filter(Boolean)
-
-  const memberIds = Array.from(new Set([meId, ...extraIds]))
 
   try {
     await mutate({
       input: {
         name: form.name.trim(),
         description: form.description.trim() || undefined,
-        memberIds
+        memberIds: extraIds
       }
     })
 
