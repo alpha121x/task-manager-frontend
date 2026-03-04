@@ -20,10 +20,17 @@ export const GetTasksQuery = gql`
     getTasks(teamId: $teamId) {
       id
       title
+      description
       status
       priority
       dueDate
       assignedTo {
+        id
+        name
+        email
+      }
+      team {
+        id
         name
       }
     }
