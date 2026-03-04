@@ -18,7 +18,7 @@
         @update:model="updateField"
       />
 
-      <p class="mt-5 text-sm text-slate-600">
+      <p class="mt-6 border-t border-slate-200 pt-4 text-sm text-slate-600">
         {{ t('auth.links.noAccount') }}
         <NuxtLink :to="routes.signup" class="font-semibold text-sky-800 hover:underline">
           {{ t('auth.actions.signup') }}
